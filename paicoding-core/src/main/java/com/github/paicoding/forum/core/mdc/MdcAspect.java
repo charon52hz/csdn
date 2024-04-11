@@ -21,8 +21,7 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.Method;
 
 /**
- * @author YiHui
- * @date 2023/5/26
+ * 定义一个切面，处理添加了@MdcDot注解的类和方法
  */
 @Slf4j
 @Aspect
@@ -31,28 +30,29 @@ public class MdcAspect implements ApplicationContextAware {
     private ExpressionParser parser = new SpelExpressionParser();
     private ParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
 
-    @Pointcut("@annotation(MdcDot) || @within(MdcDot)")
+    @Pointcut("@annotation(MdcDot) || @within(MdcDot)") //拦截所有被MdcDot注解的方法和类
     public void getLogAnnotation() {
     }
 
     @Around("getLogAnnotation()")
     public Object handle(ProceedingJoinPoint joinPoint) throws Throwable {
-        long start = System.currentTimeMillis();
-        boolean hasTag = addMdcCode(joinPoint);
+        long start = System.currentTimeMillis();            //调用业务方法前，取时间
+        boolean hasTag = addMdcCode(joinPoint);     //判断是否有注解
         try {
-            Object ans = joinPoint.proceed();
+            Object ans = joinPoint.proceed();               //调用业务方法
             return ans;
         } finally {
             log.info("执行耗时: {}#{} = {}ms",
                     joinPoint.getSignature().getDeclaringType().getSimpleName(),
                     joinPoint.getSignature().getName(),
-                    System.currentTimeMillis() - start);
+                    System.currentTimeMillis() - start);    //打印方法执行时间
             if (hasTag) {
                 MdcUtil.reset();
             }
         }
     }
 
+    //检查方法或类上是否有@MdcDot注解
     private boolean addMdcCode(ProceedingJoinPoint joinPoint) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
@@ -61,13 +61,14 @@ public class MdcAspect implements ApplicationContextAware {
             dot = (MdcDot) joinPoint.getSignature().getDeclaringType().getAnnotation(MdcDot.class);
         }
 
-        if (dot != null) {
+        if (dot != null) {  //有注解，解析注解中的值，放入MDC中
             MdcUtil.add("bizCode", loadBizCode(dot.bizCode(), joinPoint));
             return true;
         }
         return false;
     }
 
+    //解析注解中的值
     private String loadBizCode(String key, ProceedingJoinPoint joinPoint) {
         if (StringUtils.isBlank(key)) {
             return "";

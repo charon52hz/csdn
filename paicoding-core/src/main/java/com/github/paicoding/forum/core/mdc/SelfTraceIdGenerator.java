@@ -19,6 +19,16 @@ import java.util.stream.Collectors;
  * @author YiHui
  * @date 2023/5/29
  */
+
+/**
+ * traceId的作用：
+ * 当系统是分布式系统或微服务时，一个线程可能会请求多个服务，每个服务都可能产生日志信息。
+ * 所以一个请求可能会在多个机器上产生多个日志。
+ * 我们怎么知道一个请求的完整过程经过了哪些服务呢？
+ *
+ * 使用traceId作为标识符。在请求进入系统时，生成一个traceId，然后沿着请求的执行路径传递给所有参与处理请求的服务。
+ * 这些服务在生成日志时会把traceId包含在日志中。这样，通过搜索一个traceId的所有日志，就可以追踪整个请求的执行过程。
+ */
 @Slf4j
 public class SelfTraceIdGenerator {
     private final static Integer MIN_AUTO_NUMBER = 1000;
